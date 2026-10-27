@@ -51,8 +51,7 @@ whois target.com
 - Authoritative name servers (critical for later DNS enumeration).
 - Creation and expiration dates (indicate organizational maturity).
 - Abuse contact email (useful for social engineering vector mapping, though never to be exploited outside scope).
-<!-- 
-**Instructor note:** If WHOIS is privacy-protected, pivot to **Reverse WHOIS** tools (e.g., `whoisxmlapi` or `viewdns.info/reversewhois`) to find other domains registered by the same entity. -->
+
 
 #### 1.2 DNS Intelligence (Passive DNS and Certificate Transparency)
 
@@ -79,7 +78,7 @@ amass enum -passive -d digitalw0rldtech.academy
 [subfinder output](output/subfinder_output.txt),
 [Amass output](output/amass_output.txt)
 
-<!-- **Instructor scenario (Passive DNS):** "You are assessing a fictional retail company, `meridianfreight.test`. Run `subfinder` and CT log queries. Expected finding: at least 9 distinct subdomains, including a development portal that returns a different technology stack than the production site. Record every hostname and resolve it in the next phase." -->
+
 
 #### 1.3 Search Engine Dorking (Google Hacking)
 
@@ -94,8 +93,7 @@ amass enum -passive -d digitalw0rldtech.academy
 | `site:target.com intitle:"index of"` | Find directory listings | Open directories containing backups, logs, or source code |
 | `site:target.com ext:sql OR ext:db OR ext:backup` | Locate exposed database files | Downloadable SQL dumps or configuration backups |
 | `site:*.target.com "api_key" OR "api_secret"` | Find leaked credentials | Hardcoded API keys in JavaScript or HTML comments |
-<!-- 
-**Instructor note:** Google dorking is entirely passive with respect to the target's servers, but the assessor must never download or interact with sensitive files found through dorking outside a signed authorization. -->
+
 
 #### 1.4 Technology Stack Fingerprinting (Passive)
 
@@ -115,8 +113,7 @@ whatweb -a 4 target.com
 - CMS and plugins (e.g., WordPress 6.x with a vulnerable plugin).
 - JavaScript frameworks (React, Angular, jQuery versions).
 - Third-party services (Cloudflare, AWS S3 buckets, Google Analytics IDs).
-<!-- 
-**Instructor scenario (Technology stack):** "Using `whatweb -a 3 https://target.com`, you identify that the target runs Apache httpd 2.4.52. A passive Shodan query for that IP reveals CVE-2022-22720 (CVSS 9.8) associated with that version. This finding is not yet confirmed—it must be validated in the active phase, but it immediately prioritizes the web server as a high-interest target". -->
+
 
 #### 1.5 Human Intelligence and Email Harvesting
 
@@ -148,20 +145,6 @@ theHarvester -d target.com -b google,linkedin -l 500
 - Domain email addresses appearing in breaches (e.g., LinkedIn 2012, Adobe 2013, Collection #1).
 - If credentials are found, the finding is **critical** and must be reported immediately with a recommendation for forced password resets and MFA enforcement.
 
-### Module 1 Practical Exercise: Passive Footprint Report
-
-**Scenario:** You are conducting a passive reconnaissance engagement against a fictional target domain provided by the instructor (e.g., `meridianfreight.test` or a self-hosted BIND9 zone). **Do not send any packets directly to the target's IP addresses.**
-
-**Tasks:**
-1.  Run WHOIS and record the registrar, name servers, and registration dates.
-2.  Execute at least two subdomain enumeration tools (e.g., `subfinder` and `amass enum -passive`) and produce a deduplicated list of discovered hostnames.
-3.  Query `crt.sh` for certificate transparency entries and cross-reference with your subdomain list.
-4.  Perform three Google dorks against the target domain and document any sensitive indexed content.
-5.  Use `whatweb` or Wappalyzer to identify the technology stack of the main domain.
-6.  Run `theHarvester` and compile a list of employee email addresses and formats.
-7.  Query HaveIBeenPwned for the target domain and record any breach exposure.
-
-**Deliverable:** A passive footprint report containing a host inventory table (hostname, IP if resolved, technology, source of discovery) and a risk-ranked list of the top three passive findings. **Expected minimum findings:** at least 5 subdomains, 1 technology version leak, and 1 sensitive indexed artifact (or a documented absence of exposure).
 
 ## Module 2: Active Reconnaissance — "Direct Interrogation"
 
@@ -224,7 +207,6 @@ namp -A -T4 -p- 192.168.0.4 -O nmap_scan.txt
 | 3306/tcp | MySQL | MySQL 5.0.51a | Weak authentication or default credentials possible |
 | 5432/tcp | PostgreSQL | PostgreSQL 8.3 | Outdated database service |
 
-<!-- **Instructor note:** The exact service versions depend on the target VM. The pedagogical objective is not memorizing CVEs but teaching learners to **map version banners to vulnerability databases (NVD, Exploit-DB)** in the next phase. Emphasize the difference between `-sS` (SYN/half-open, stealthier) and `-sT` (full connect, more likely to be logged). -->
 
 #### 2.3 DNS Enumeration and Zone Transfer Testing
 
@@ -256,8 +238,7 @@ puredns bruteforce wordlist.txt target.com -r resolvers.txt
 - Internal hostnames such as `intranet.target.com`, `dc01.target.com`, `backup.target.com`.
 - SRV records revealing Active Directory services (`_kerberos._tcp`, `_ldap._tcp`).
 - SPF and DMARC TXT records that disclose email providers and cloud services.
-<!-- 
-**Instructor scenario (Zone transfer):** "Attempt `dig axfr @ns1.target.com target.com`. If the transfer succeeds, you have obtained the complete host inventory without scanning a single IP address. Document every hostname, resolve it to an IP, and cross-reference with your Nmap output. The zone transfer finding is a **high-severity misconfiguration** and must be reported with a remediation recommendation to restrict AXFR to authorized secondary name servers using TSIG authentication". -->
+
 
 #### 2.4 Banner Grabbing
 
@@ -287,8 +268,7 @@ nmap --script=banner -p 21,22,25,80 192.168.0.4
 - SMTP banner: `220 metasploitable.localdomain ESMTP Postfix (Ubuntu)`.
 - FTP banner: `220 (vsFTPd 2.3.4)`.
 - SSH banner: `SSH-2.0-OpenSSH_4.7p1 Debian-8ubuntu1`.
-<!-- 
-**Instructor note:** Banner grabbing is noisy—the connection appears in service logs. In a real engagement, coordinate timing with the client's SOC to avoid false alarms. In the lab, use it to teach learners that a single `nc` command can yield the same version intelligence as an Nmap script, reinforcing the principle that reconnaissance is about **understanding the protocol**, not just running tools. -->
+
 
 #### 2.5 Web Server and Application Scanning (Initial)
 
@@ -310,20 +290,6 @@ nmap --script=http-headers,http-methods -p 80 192.168.0.4
 - Default `phpinfo()` page exposed.
 - Directory indexing enabled on `/icons/` or `/docs/`.
 
-### Module 2 Practical Exercise: Active Reconnaissance Lab
-
-**Scenario:** You have completed passive reconnaissance against `192.168.0.4` (Metasploitable 2) and identified it as a high-value target. Now perform active reconnaissance within the authorized lab scope.
-
-**Tasks:**
-1.  Perform a ping sweep of the lab subnet and identify all live hosts.
-2.  Run a full TCP port scan (`-p-`) on the target and save the output in three formats (`-oA`).
-3.  Perform service version detection (`-sV`) on all open ports. Create a table mapping each port to its service and version.
-4.  Attempt a zone transfer against the target's DNS server (if applicable) or against `zonetransfer.me` as a controlled exercise.
-5.  Banner-grab at least three services using `nc` and compare the banners to the Nmap `-sV` output.
-6.  Run Nikto against the web server and record three findings.
-7.  For each open service, query the NVD or Exploit-DB for known vulnerabilities associated with the detected version. Document at least three CVE candidates (these are hypotheses to be validated, not confirmed vulnerabilities).
-
-**Deliverable:** An active reconnaissance report containing a host inventory table, a port/service/version matrix, a CVE candidate list, and a prioritized list of the top three services that warrant deeper enumeration. **Expected minimum findings:** at least 6 open TCP ports, 3 distinct service banners, and 3 CVE candidates with CVSS scores.
 
 ## Module 3: Content Discovery and Enumeration
 
@@ -372,18 +338,6 @@ arjun -u http://192.168.0.4/page.php
 - Hidden parameters such as `?debug=1`, `?admin=true`, `?file=`, or `?redirect=`.
 - Parameters that change application behavior (e.g., enabling verbose error messages).
 
-<!-- ### Module 3 Practical Exercise: Content Discovery Lab
-
-**Scenario:** The target web server at `192.168.0.4` is running a default application. Use directory fuzzing to discover at least three unlinked paths.
-
-**Tasks:**
-1.  Run Gobuster with the `common.txt` wordlist and record all 200, 301, and 403 responses.
-2.  Run FFUF with a larger wordlist and filter out 404 responses.
-3.  Manually inspect each discovered directory/file in a browser or with `curl`.
-4.  Run Arjun against the main application page to discover hidden parameters.
-5.  Document the risk associated with each finding (e.g., "Exposed `/backup/` directory contains a SQL dump with password hashes—Critical").
-
-**Deliverable:** A content discovery findings table with path, HTTP status, content type, and risk justification. **Expected minimum findings:** at least 3 unlinked directories and 1 hidden parameter. -->
 
 ## Module 4: Vulnerability Discovery — From Reconnaissance to Findings
 
@@ -415,7 +369,6 @@ Vulnerability discovery is the bridge between reconnaissance and exploitation. I
 | Medium | ICMP Timestamp Request Remote Date Disclosure | CVE-1999-0524 | 2.1 |
 | Info | Apache HTTP Server Detected (Port 80) | — | — |
 
-<!-- **Instructor note:** A well-conducted Nessus scan against a deliberately vulnerable target will typically yield **15–25 findings**, with a mix of Critical, High, Medium, and Informational. The pedagogical value is not in the raw count but in teaching learners to **validate each finding** (Nessus can produce false positives) and to **prioritize based on asset criticality** rather than CVSS alone. -->
 
 #### 4.2 Manual Validation and CVE Research
 
@@ -430,22 +383,6 @@ Vulnerability discovery is the bridge between reconnaissance and exploitation. I
 
 **Expected finding example:** "Nessus reports CVE-2011-2523 (vsftpd 2.3.4 backdoor). Manual validation: connecting to port 21 and sending a username ending in `:)` triggers a shell on port 6200. Evidence: `nc 192.168.0.4 6200` returned a root shell. **Confirmed.**"
 
-### Module 4 Practical Exercise: Vulnerability Assessment and Triage
-
-**Scenario:** You have completed active reconnaissance and content discovery. Now run a full vulnerability assessment and produce a prioritized remediation plan.
-
-**Tasks:**
-1.  Run an unauthenticated Nessus scan against the target and export the report.
-2.  Run an authenticated Nessus scan (SSH credentials provided by the instructor) and compare the findings.
-3.  Select **five** findings and manually validate each one using safe, non-destructive techniques.
-4.  For each validated finding, assign a risk rating using **Likelihood × Impact**, not just CVSS.
-5.  Write a remediation recommendation for each finding, prioritized by business risk.
-
-**Deliverable:** A vulnerability assessment report with a findings summary table (finding, CVE, CVSS, validation evidence, risk rating, remediation) and a top-5 prioritized remediation roadmap. **Expected minimum findings:** at least 10 scanner findings, 5 manually validated, and 3 confirmed critical/high-severity issues.
-
-## Consolidated Lab Scenario: "Operation Shadow Map"
-
-The following end-to-end scenario integrates all four modules into a single assessment, suitable for a capstone exercise or multi-week project.
 
 **Scenario:** You are a penetration tester contracted by a fictional logistics company, **Meridian Freight**, to assess the security of its external perimeter and a newly acquired subsidiary's web application. The engagement is authorized under a signed Rules of Engagement. The target scope includes the domain `meridianfreight.test` (self-hosted BIND9 zone) and the IP address `192.168.0.4` (Metasploitable 2).
 
